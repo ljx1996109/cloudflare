@@ -11035,6 +11035,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 							onclick="openAPIOptimizeModal()">订阅接口</button>
 						<button type="button" class="btn btn-chain-proxy hidden-section" id="chainProxyBtn"
 							onclick="openChainProxyModal()">链式代理</button>
+						<button type="button" class="btn btn-primary" style="background-color: #4CAF50; border: none; margin-right: 10px;" id="autoSelectIpBtn" onclick="autoSelectIP()">自动获取优选IP</button>
 						<div class="btn-group">
 							<button type="button" class="btn btn-secondary" onclick="cancelEdit('sub')" disabled
 								id="cancelSubBtn">取消</button>
@@ -21164,6 +21165,22 @@ svg.leaflet-image-layer.leaflet-interactive path {
 			domain = domain.replace(/:\d+$/, '');
 
 			return domain.trim();
+		}
+
+		async function autoSelectIP() {
+			try {
+				showToast('正在后台获取最佳IP并测速...', 'info');
+				const response = await fetch('/admin/autoSelectIP', { method: 'POST' });
+				const result = await response.json();
+				if (result.success) {
+					showToast('已成功获取并应用20个最佳IP，即将刷新', 'success');
+					setTimeout(() => location.reload(), 2000);
+				} else {
+					showToast(result.error || '获取失败', 'error');
+				}
+			} catch (error) {
+				showToast('网络请求失败', 'error');
+			}
 		}
 
 		async function saveSub() {
