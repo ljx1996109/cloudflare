@@ -6235,7 +6235,11 @@ async function 自动优选最佳IP(env, config_JSON, request) {
 			const 地址数组 = 替换后的内容.split(',');
 			const top20 = 地址数组.slice(0, 20).join('\n');
 			await env.KV.put('ADD.txt', top20);
-			console.log('自动优选最佳IP执行成功，已更新ADD.txt');
+			if (config_JSON && config_JSON.优选订阅生成 && config_JSON.优选订阅生成.本地IP库) {
+				config_JSON.优选订阅生成.本地IP库.随机IP = false;
+				await env.KV.put('config.json', JSON.stringify(config_JSON, null, 2));
+			}
+			console.log('自动优选最佳IP执行成功，已更新ADD.txt和配置');
 		}
 	} catch (e) {
 		console.error('自动优选最佳IP执行失败', e);
