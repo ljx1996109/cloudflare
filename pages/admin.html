@@ -10973,19 +10973,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
 				</div>
 				<div class="module-content">
 
-					<div class="form-group" style="display: flex; gap: 10px; margin-bottom: 15px;">
-						<div style="flex: 1;">
-							<label for="ctCount" style="font-size: 13px; margin-bottom: 5px;">🇨🇳电信下发数</label>
-							<input type="number" id="ctCount" title="0~99" min="0" max="99" value="20" onchange="markModified('sub')">
-						</div>
-						<div style="flex: 1;">
-							<label for="cuCount" style="font-size: 13px; margin-bottom: 5px;">🇨🇳联通下发数</label>
-							<input type="number" id="cuCount" title="0~99" min="0" max="99" value="20" onchange="markModified('sub')">
-						</div>
-						<div style="flex: 1;">
-							<label for="cmccCount" style="font-size: 13px; margin-bottom: 5px;">🇨🇳移动下发数</label>
-							<input type="number" id="cmccCount" title="0~99" min="0" max="99" value="20" onchange="markModified('sub')">
-						</div>
+					<div class="form-group">
+						<label for="ctCount">🇨🇳 电信节点下发数</label>
+						<input type="number" id="ctCount" title="电信优选数量 0~99" min="0" max="99" value="20" onchange="markModified('sub')">
+					</div>
+
+					<div class="form-group">
+						<label for="cuCount">🇨🇳 联通节点下发数</label>
+						<input type="number" id="cuCount" title="联通优选数量 0~99" min="0" max="99" value="20" onchange="markModified('sub')">
+					</div>
+
+					<div class="form-group">
+						<label for="cmccCount">🇨🇳 移动节点下发数</label>
+						<input type="number" id="cmccCount" title="移动优选数量 0~99" min="0" max="99" value="20" onchange="markModified('sub')">
 					</div>
 
 					<div id="portSection" class="form-group hidden-section">
