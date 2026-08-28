@@ -5484,19 +5484,21 @@ async function 生成随机IP(request, count = 16, 指定端口 = -1) {
 	
 	let ipList = [];
 	try {
-		// 获取行业公认的最新优选高质量IP (带有CF缓存)
-		const res = await fetch(api_url, { cf: { cacheTtl: 900 } }); // 缓存15分钟
+		// 获取行业公认的最新优选高质量IP
+		const res = await fetch(api_url);
 		if (res.ok) {
 			const text = await res.text();
 			ipList = text.split('\n').map(line => line.trim()).filter(Boolean);
 		}
-	} catch (e) {}
+	} catch (e) {
+		console.error('API Fetch Error:', e);
+	}
 
 	// 如果API挂了，降级为CIDR随机生成算法
 	if (ipList.length === 0) {
 		const cidr_url = 运营商文件标识 === 'cf' ? `https://raw.githubusercontent.com/ljx1996109/cloudflare/main/cidr/CF-CIDR.txt` : `https://raw.githubusercontent.com/ljx1996109/cloudflare/main/cidr/${运营商文件标识}.txt`;
 		try { 
-			const res = await fetch(cidr_url, { cf: { cacheTtl: 3600 } }); 
+			const res = await fetch(cidr_url); 
 			const cidrList = res.ok ? await 整理成数组(await res.text()) : ['104.16.0.0/13'];
 			const generateRandomIPFromCIDR = (cidr) => {
 				const [baseIP, prefixLength] = cidr.split('/'), prefix = parseInt(prefixLength), hostBits = 32 - prefix;
