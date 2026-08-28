@@ -6225,18 +6225,24 @@ async function html1101(host, 访问IP) {
 }
 async function 自动优选最佳IP(env, config_JSON, request) {
 	try {
-		const 测速API = 'https://ip.164746.xyz/ipTop';  
-		const res = await fetch(测速API);
+		const res = await fetch('https://addressesapi.090227.xyz/CloudFlareYes');
 		if (res.ok) {
-			let 替换后的内容 = await res.text();
-			替换后的内容 = 替换后的内容.replace(/[	"'\r\n]+/g, ',').replace(/,+/g, ',');
-			if (替换后的内容.charAt(0) == ',') 替换后的内容 = 替换后的内容.slice(1);
-			if (替换后的内容.charAt(替换后的内容.length - 1) == ',') 替换后的内容 = 替换后的内容.slice(0, 替换后的内容.length - 1);
-			const 地址数组 = 替换后的内容.split(',');
-			const top20 = 地址数组.slice(0, 20).join('\n');
+			let text = await res.text();
+			let ips = text.split('
+').filter(Boolean).map(ip => ip.replace(/[	"'
+]+/g, '').trim());
+			if (ips.length < 20) {
+				const randomIPs = (await 生成随机IP(request || {url: 'http://localhost'}, 20 - ips.length, -1))[0];
+				ips = ips.concat(randomIPs);
+			}
+			const top20 = ips.slice(0, 20).join('
+');
 			await env.KV.put('ADD.txt', top20);
-			if (config_JSON && config_JSON.优选订阅生成 && config_JSON.优选订阅生成.本地IP库) {
-				config_JSON.优选订阅生成.本地IP库.随机IP = false;
+			if (config_JSON && config_JSON.优选订阅生成) {
+				config_JSON.优选订阅生成.local = true;
+				if (config_JSON.优选订阅生成.本地IP库) {
+					config_JSON.优选订阅生成.本地IP库.随机IP = false;
+				}
 				await env.KV.put('config.json', JSON.stringify(config_JSON, null, 2));
 			}
 			console.log('自动优选最佳IP执行成功，已更新ADD.txt和配置');
