@@ -365,12 +365,23 @@ export default {
 							const TLS分片参数 = config_JSON.TLS分片 == 'Shadowrocket' ? `&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}` : config_JSON.TLS分片 == 'Happ' ? `&fragment=${encodeURIComponent('3,1,tlshello')}` : '';
 							let 完整优选IP = [], 其他节点LINK = '', 反代IP池 = [];
 
-							if (!url.searchParams.has('sub') && config_JSON.优选订阅生成.local) { // 本地生成订阅
-								const 完整优选列表 = config_JSON.优选订阅生成.本地IP库.随机IP ? (
-									await 生成随机IP(request, config_JSON.优选订阅生成.本地IP库.随机数量, config_JSON.优选订阅生成.本地IP库.指定端口)
-								)[0] : await env.KV.get('ADD.txt') ? await 整理成数组(await env.KV.get('ADD.txt')) : (
-									await 生成随机IP(request, config_JSON.优选订阅生成.本地IP库.随机数量, config_JSON.优选订阅生成.本地IP库.指定端口)
-								)[0];
+							if (true) { // 强行接管为本地生成订阅
+								let 完整优选列表 = [];
+								const baseReqUrl = request.url.split('?')[0] + '?';
+								const port = config_JSON.优选订阅生成.本地IP库.指定端口 !== undefined ? config_JSON.优选订阅生成.本地IP库.指定端口 : -1;
+								const ct = config_JSON.优选订阅生成.本地IP库.CT !== undefined ? config_JSON.优选订阅生成.本地IP库.CT : 20;
+								const cu = config_JSON.优选订阅生成.本地IP库.CU !== undefined ? config_JSON.优选订阅生成.本地IP库.CU : 20;
+								const cmcc = config_JSON.优选订阅生成.本地IP库.CMCC !== undefined ? config_JSON.优选订阅生成.本地IP库.CMCC : 20;
+								
+								if (ct > 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=ct'), ct, port))[0]);
+								if (cu > 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cu'), cu, port))[0]);
+								if (cmcc > 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cmcc'), cmcc, port))[0]);
+								
+								// 如果全为0，默认生成20个官方IP
+								if (完整优选列表.length === 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cf'), 20, port))[0]);
+								
+								// 随机打乱列表
+								完整优选列表 = 完整优选列表.sort(() => Math.random() - 0.5);
 								const 优选API = [], 优选IP = [], 其他节点 = [];
 								for (const 元素 of 完整优选列表) {
 									if (元素.toLowerCase().startsWith('sub://')) {
@@ -5208,8 +5219,9 @@ async function 读取config_JSON(env, hostname, userID, UA = "Mozilla/5.0", 重�
 		优选订阅生成: {
 			local: true, // true: 基于本地的优选地址  false: 优选订阅生成器
 			本地IP库: {
-				随机IP: true, // 当 随机IP 为true时生效，启用随机IP的数量，否则使用KV内的ADD.txt
-				随机数量: 16,
+				CT: 20,
+				CU: 20,
+				CMCC: 20,
 				指定端口: -1,
 			},
 			SUB: null,

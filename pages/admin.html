@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
@@ -10973,19 +10973,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
 				</div>
 				<div class="module-content">
 
-					<div class="form-group">
-						<label for="ipMode">优选订阅模式</label>
-						<select id="ipMode" title="优选订阅模式" onchange="updateIPMode()">
-							<option value="custom" selected>自定义优选（支持自动获取最佳IP）</option>
-							<option value="random">随机优选（根据订阅时的网络自动下发对应网络的官方优选）</option>
-							<option value="generator">优选订阅生成器（抄作业，直接使用大佬优选好的结果）</option>
-						</select>
-					</div>
-
-					<div id="randomIPSection" class="form-group">
-						<label for="randomCount">随机优选数量</label>
-						<input type="number" id="randomCount" title="随机优选数量 1~99" min="1" max="99" value="16"
-							onchange="markModified('sub')" oninput="if(this.value>99){this.value=99;}">
+					<div class="form-group" style="display: flex; gap: 10px; margin-bottom: 15px;">
+						<div style="flex: 1;">
+							<label for="ctCount" style="font-size: 13px; margin-bottom: 5px;">🇨🇳电信下发数</label>
+							<input type="number" id="ctCount" title="0~99" min="0" max="99" value="20" onchange="markModified('sub')">
+						</div>
+						<div style="flex: 1;">
+							<label for="cuCount" style="font-size: 13px; margin-bottom: 5px;">🇨🇳联通下发数</label>
+							<input type="number" id="cuCount" title="0~99" min="0" max="99" value="20" onchange="markModified('sub')">
+						</div>
+						<div style="flex: 1;">
+							<label for="cmccCount" style="font-size: 13px; margin-bottom: 5px;">🇨🇳移动下发数</label>
+							<input type="number" id="cmccCount" title="0~99" min="0" max="99" value="20" onchange="markModified('sub')">
+						</div>
 					</div>
 
 					<div id="portSection" class="form-group hidden-section">
@@ -11001,39 +11001,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 						</select>
 					</div>
 
-					<div id="customIPSection" class="form-group hidden-section">
-						<div class="label-with-hint">
-							<label for="customIPs">自定义优选</label>
-							<button type="button" class="inline-hint-btn" title="查看自定义优选 填写说明"
-								onclick="showAuthTokenHelpModal('customIPs')" aria-label="查看自定义优选 填写说明">!</button>
-						</div>
-						<div class="line-editor line-editor-wrap" id="subCustomEditor">
-							<div class="gutter" aria-hidden="true">
-								<pre>1</pre>
-							</div>
-							<div class="editor-area">
-								<div class="line-shades" aria-hidden="true">
-									<div class="shade-line"></div>
-								</div>
-								<textarea id="customIPs" title="自定义优选地址" wrap="soft" placeholder="www.visa.cn#优选域名
-104.24.0.232:8443#优选IPv4
-[2606:4700::]:2053#优选IPv6" onchange="markModified('sub')"></textarea>
-							</div>
-						</div>
-					</div>
 
-					<div id="generatorSection" class="form-group hidden-section">
-						<label for="generatorURL">优选订阅生成器</label>
-						<input type="text" id="generatorURL" title="优选订阅生成器" placeholder="sub.cmliussss.net"
-							onchange="processGeneratorURL()" oninput="processGeneratorURL()">
-					</div>
-
-					<div class="module-footer">
-						<button type="button" class="btn btn-primary hidden-section" style="background-color: #4CAF50; border: none; margin-right: 10px;" id="autoSelectIpBtn" onclick="autoSelectIP()">自动获取优选IP</button>
-						<button type="button" class="btn btn-api-optimize hidden-section" id="apiOptimizeBtn"
-							onclick="openAPIOptimizeModal()">订阅接口</button>
-						<button type="button" class="btn btn-chain-proxy hidden-section" id="chainProxyBtn"
-							onclick="openChainProxyModal()">链式代理</button>
 						<div class="btn-group">
 							<button type="button" class="btn btn-secondary" onclick="cancelEdit('sub')" disabled
 								id="cancelSubBtn">取消</button>
@@ -19651,25 +19619,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
 			document.getElementById('clashLink').value = `https://${host}/sub?token=${token}&clash`;
 			document.getElementById('singboxLink').value = `https://${host}/sub?token=${token}&sb`;
 
-			// 编辑订阅生成
-			const local = currentConfig.优选订阅生成?.local ?? true;
-			const randomIP = currentConfig.优选订阅生成?.本地IP库?.随机IP ?? true;
-
-			if (!local) {
-				document.getElementById('ipMode').value = 'generator';
-				document.getElementById('generatorURL').value = currentConfig.优选订阅生成?.SUB || '';
-			} else if (randomIP) {
-				document.getElementById('ipMode').value = 'random';
-				document.getElementById('randomCount').value = currentConfig.优选订阅生成?.本地IP库?.随机数量 || 16;
-				// 设置指定端口
-				if (currentConfig.优选订阅生成?.本地IP库?.指定端口 !== undefined) {
-					document.getElementById('specifiedPort').value = currentConfig.优选订阅生成.本地IP库.指定端口;
-				}
-			} else {
-				document.getElementById('ipMode').value = 'custom';
-				loadCustomIPs();
+			// 编辑订阅生成 (ISP节点策略)
+			if (currentConfig.优选订阅生成 && currentConfig.优选订阅生成.本地IP库) {
+				document.getElementById('ctCount').value = currentConfig.优选订阅生成.本地IP库.CT !== undefined ? currentConfig.优选订阅生成.本地IP库.CT : 20;
+				document.getElementById('cuCount').value = currentConfig.优选订阅生成.本地IP库.CU !== undefined ? currentConfig.优选订阅生成.本地IP库.CU : 20;
+				document.getElementById('cmccCount').value = currentConfig.优选订阅生成.本地IP库.CMCC !== undefined ? currentConfig.优选订阅生成.本地IP库.CMCC : 20;
+				document.getElementById('specifiedPort').value = currentConfig.优选订阅生成.本地IP库.指定端口 !== undefined ? currentConfig.优选订阅生成.本地IP库.指定端口 : -1;
 			}
-			updateIPMode();
 
 			// 详细配置
 			document.getElementById('subName').value = currentConfig.优选订阅生成?.SUBNAME || '';
@@ -19897,68 +19853,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 		}
 
 		function updateIPMode() {
-			const mode = document.getElementById('ipMode').value;
-
-			const sections = {
-				'random': document.getElementById('randomIPSection'),
-				'custom': document.getElementById('customIPSection'),
-				'generator': document.getElementById('generatorSection')
-			};
-
-			Object.keys(sections).forEach(key => {
-				const el = sections[key];
-				if (el) {
-					if (key === mode) {
-						el.classList.remove('hidden-section');
-						el.style.display = (key === 'custom') ? 'block' : 'grid';
-					} else {
-						el.classList.add('hidden-section');
-						el.style.display = 'none';
-					}
-				}
-			});
-
-			if (mode === 'custom') {
-				requestAnimationFrame(() => refreshLineEditor(document.getElementById('customIPs')));
-			}
-
-			// 显示或隐藏指定端口
-			const portSection = document.getElementById('portSection');
-			if (portSection) {
-				if (mode === 'random' && currentConfig.优选订阅生成?.本地IP库?.指定端口 !== undefined) {
-					portSection.classList.remove('hidden-section');
-					portSection.style.display = 'grid';
-				} else {
-					portSection.classList.add('hidden-section');
-					portSection.style.display = 'none';
-				}
-			}
-
-			// 显示或隐藏在线优选、订阅接口和链式代理按钮（仅在自定义优选模式下显示）
-			const onlineOptimizeBtn = document.getElementById('onlineOptimizeBtn');
-			const apiOptimizeBtn = document.getElementById('apiOptimizeBtn');
-			if (onlineOptimizeBtn) {
-				if (mode === 'custom') {
-					onlineOptimizeBtn.classList.remove('hidden-section');
-				} else {
-					onlineOptimizeBtn.classList.add('hidden-section');
-				}
-			}
-			if (apiOptimizeBtn) {
-				if (mode === 'custom') {
-					apiOptimizeBtn.classList.remove('hidden-section');
-				} else {
-					apiOptimizeBtn.classList.add('hidden-section');
-				}
-			}
-			updateChainProxyButtonVisibility(mode);
-
-			// 当切换到自定义优选时，自动加载现有的ADD.txt内容
-			if (mode === 'custom') {
-				loadCustomIPs();
-			}
-
-			markModified('sub');
+			return;
 		}
 
 		function updateChainProxyButtonVisibility(mode = null) {
@@ -21182,55 +21077,21 @@ svg.leaflet-image-layer.leaflet-interactive path {
 		}
 
 		async function saveSub() {
-			const mode = document.getElementById('ipMode').value;
-
-			// 检查文本框内容是否为空
-			if (mode === 'random') {
-				const randomCount = document.getElementById('randomCount').value.trim();
-				if (!randomCount) {
-					showToast('随机优选数量不能为空', 'error');
-					return;
-				}
-			} else if (mode === 'custom') {
-				const customIPs = document.getElementById('customIPs').value.trim();
-				if (!customIPs) {
-					showToast('自定义优选地址不能为空', 'error');
-					return;
-				}
-			} else if (mode === 'generator') {
-				const generatorURL = document.getElementById('generatorURL').value.trim();
-				if (!generatorURL) {
-					showToast('优选订阅生成器地址不能为空', 'error');
-					return;
-				}
-			}
-
 			const updates = {
-				local: mode !== 'generator',
-				本地IP库: { 随机IP: mode === 'random', 随机数量: parseInt(document.getElementById('randomCount').value) || 16 },
-				SUB: mode === 'generator' ? document.getElementById('generatorURL').value : null,
+				local: true,
+				本地IP库: { 
+					CT: parseInt(document.getElementById('ctCount').value) || 0,
+					CU: parseInt(document.getElementById('cuCount').value) || 0,
+					CMCC: parseInt(document.getElementById('cmccCount').value) || 0,
+					指定端口: parseInt(document.getElementById('specifiedPort').value)
+				},
+				SUB: null,
 				SUBNAME: currentConfig.优选订阅生成.SUBNAME,
 				SUBUpdateTime: currentConfig.优选订阅生成.SUBUpdateTime,
 				TOKEN: currentConfig.优选订阅生成.TOKEN
 			};
 
-			// 如果指定端口存在，添加到本地IP库
-			if (currentConfig.优选订阅生成?.本地IP库?.指定端口 !== undefined) {
-				updates.本地IP库.指定端口 = parseInt(document.getElementById('specifiedPort').value);
-			}
-
 			currentConfig.优选订阅生成 = { ...currentConfig.优选订阅生成, ...updates };
-
-			if (mode === 'custom') {
-				const customIPs = document.getElementById('customIPs').value;
-				try {
-					await fetch('/admin/ADD.txt', { method: 'POST', body: customIPs });
-				} catch (error) {
-					showToast('保存自定义IP失败', 'error');
-					return;
-				}
-			}
-
 			await saveConfigToServer('sub');
 		}
 
