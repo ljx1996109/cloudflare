@@ -10976,9 +10976,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					<div class="form-group">
 						<label for="ipMode">优选订阅模式</label>
 						<select id="ipMode" title="优选订阅模式" onchange="updateIPMode()">
-							<option value="generator">优选订阅生成器（抄作业，直接使用大佬优选好的结果）</option>
+							<option value="custom" selected>自定义优选（支持自动获取最佳IP）</option>
 							<option value="random">随机优选（根据订阅时的网络自动下发对应网络的官方优选）</option>
-							<option value="custom">自定义订阅（支持汇聚订阅）</option>
+							<option value="generator">优选订阅生成器（抄作业，直接使用大佬优选好的结果）</option>
 						</select>
 					</div>
 
@@ -11029,13 +11029,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					</div>
 
 					<div class="module-footer">
-						<button type="button" class="btn btn-online-optimize hidden-section" id="onlineOptimizeBtn"
-							onclick="openOptimizeStartModal()">开始优选</button>
+						<button type="button" class="btn btn-primary hidden-section" style="background-color: #4CAF50; border: none; margin-right: 10px;" id="autoSelectIpBtn" onclick="autoSelectIP()">自动获取优选IP</button>
 						<button type="button" class="btn btn-api-optimize hidden-section" id="apiOptimizeBtn"
 							onclick="openAPIOptimizeModal()">订阅接口</button>
 						<button type="button" class="btn btn-chain-proxy hidden-section" id="chainProxyBtn"
 							onclick="openChainProxyModal()">链式代理</button>
-						<button type="button" class="btn btn-primary" style="background-color: #4CAF50; border: none; margin-right: 10px;" id="autoSelectIpBtn" onclick="autoSelectIP()">自动获取优选IP</button>
 						<div class="btn-group">
 							<button type="button" class="btn btn-secondary" onclick="cancelEdit('sub')" disabled
 								id="cancelSubBtn">取消</button>
