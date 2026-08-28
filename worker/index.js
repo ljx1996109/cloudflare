@@ -6284,15 +6284,12 @@ async function 自动优选最佳IP(env, config_JSON, request) {
 		const res = await fetch('https://addressesapi.090227.xyz/CloudFlareYes');
 		if (res.ok) {
 			let text = await res.text();
-			let ips = text.split('
-').filter(Boolean).map(ip => ip.replace(/[	"'
-]+/g, '').trim());
+			let ips = text.split('\n').filter(Boolean).map(ip => ip.replace(/[\t\"\'\n]+/g, '').trim());
 			if (ips.length < 20) {
 				const randomIPs = (await 生成随机IP(request || {url: 'http://localhost'}, 20 - ips.length, -1))[0];
 				ips = ips.concat(randomIPs);
 			}
-			const top20 = ips.slice(0, 20).join('
-');
+			const top20 = ips.slice(0, 20).join('\n');
 			await env.KV.put('ADD.txt', top20);
 			if (config_JSON && config_JSON.优选订阅生成) {
 				config_JSON.优选订阅生成.local = true;
