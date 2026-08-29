@@ -20058,8 +20058,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 		function ipv6ToBigInt(ip) {
 			const parts = ip.split('::');
 			if (parts.length > 2) return null;
-			let left = parts[0] ? parts[0].split(':') : [];
-			let right = parts[1] ? parts[1].split(':') : [];
+			let left = parts[0] ? parts[0].split(':').filter(x => x !== '') : [];
+			let right = parts[1] ? parts[1].split(':').filter(x => x !== '') : [];
 			
 			while (left.length + right.length < 8) {
 				left.push('0');
