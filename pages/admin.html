@@ -10999,7 +10999,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					</div>
 
 					<div id="customIpsSection" class="form-group hidden-section">
-						<label for="customIPs">自定义优选 IP 列表（一行一个）</label>
+						<label for="customIPs" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+							自定义优选 IP 列表（一行一个）
+							<button class="btn" type="button" onclick="runUltimateOptimizeMacro()" style="padding: 4px 10px; font-size: 12px; margin-top: 4px; background: var(--primary);">本地一键极致优选并应用</button>
+						</label>
 						<textarea id="customIPs" rows="6" onchange="markModified('sub')" placeholder="请输入你要强制使用的优选IP，每行一个。保存后生效。"></textarea>
 						<small class="form-help">如果留空，将自动回退到“自动优选”功能。</small>
 						<button class="btn success" type="button" onclick="saveCustomIPs()" style="margin-top: 10px; width: 100%;">保存自定义IP</button>
@@ -19900,6 +19903,87 @@ svg.leaflet-image-layer.leaflet-interactive path {
 				}
 			} catch (error) {
 				showToast('网络错误，保存失败', 'error');
+			}
+		}
+
+		async function runUltimateOptimizeMacro() {
+			showToast('正在拉取全网优质源节点...', 'info');
+			// 1. 切换到“优选工具”标签页
+			const optimizeMenu = document.querySelector('.menu-item[data-target="optimize"]');
+			if (optimizeMenu) optimizeMenu.click();
+			
+			try {
+				// 2. 从 API 聚合拉取近 500 个 IP
+				const endpoints = ['CloudFlareYes', 'ct', 'cu', 'cmcc'];
+				let allIps = [];
+				for (const ep of endpoints) {
+					try {
+						const r = await fetch('https://addressesapi.090227.xyz/' + ep);
+						if (r.ok) {
+							const text = await r.text();
+							allIps.push(...text.split('\n').map(l => l.trim()).filter(Boolean));
+						}
+					} catch (e) {}
+				}
+				// 去重
+				allIps = [...new Set(allIps)];
+				
+				if (allIps.length === 0) {
+					showToast('获取源 IP 失败，请检查网络', 'error');
+					return;
+				}
+				
+				// 3. 填入优选工具的输入框，并触发解析
+				const ipInput = document.getElementById('ipInput');
+				ipInput.value = allIps.join('\n');
+				ipInput.dispatchEvent(new Event('input', { bubbles: true }));
+				
+				// 4. 触发测速
+				const latencyBtn = document.getElementById('latencyBtn');
+				if (latencyBtn && !latencyBtn.disabled) {
+					latencyBtn.click();
+					showToast(`已开始本地测速 (${allIps.length} 个 IP)，请耐心等待过程跑完...`, 'info');
+					
+					// 5. 轮询等待测速结束
+					const checkInterval = setInterval(async () => {
+						const btnText = latencyBtn.innerText || '';
+						if (!btnText.includes('停止') && !btnText.includes('正在')) {
+							// 测速结束
+							clearInterval(checkInterval);
+							
+							// 提取前 60 个低延迟 IP
+							const rows = Array.from(document.querySelectorAll('#resultsTbody tr.result-row'));
+							const top60 = rows.slice(0, 60).map(tr => tr.dataset.resultId).filter(Boolean);
+							
+							if (top60.length > 0) {
+								// 切回配置页
+								const subMenu = document.querySelector('.menu-item[data-target="sub"]');
+								if (subMenu) subMenu.click();
+								
+								// 开启自定义开关
+								const toggle = document.getElementById('useCustomIPsToggle');
+								if (toggle && !toggle.checked) {
+									toggle.click();
+								}
+								
+								// 填入并保存
+								document.getElementById('customIPs').value = top60.join('\n');
+								await saveCustomIPs();
+								
+								// 点击总保存按钮（固化配置）
+								await saveConfigToServer('sub');
+								
+								showToast('一键极致优选完成！已自动剔除高延迟节点并应用生效！', 'success');
+							} else {
+								showToast('未能获取到有效的测速结果', 'error');
+							}
+						}
+					}, 2000);
+				} else {
+					showToast('无法启动测速工具，请检查网络或重试', 'error');
+				}
+			} catch (e) {
+				showToast('宏执行出错', 'error');
 			}
 		}
 
