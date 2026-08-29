@@ -287,7 +287,10 @@ export default {
 									try {
 										const parsed = JSON.parse(body);
 										if (Array.isArray(parsed.endpoints) && parsed.endpoints.length > 0) {
-											endpoints = parsed.endpoints.filter(ep => ['CloudFlareYes', 'ct', 'cu', 'cmcc', 'cf_v4', 'cf_v6'].includes(ep));
+											endpoints = parsed.endpoints.filter(ep => [
+												'CloudFlareYes', 'ct', 'cu', 'cmcc', 'cf_v4', 'cf_v6',
+												'cm_cidr', 'as13335_v4', 'as13335_v6', 'as209242_v4', 'as209242_v6'
+											].includes(ep));
 										}
 									} catch (e) {}
 								}
@@ -297,6 +300,11 @@ export default {
 										let url = 'https://addressesapi.090227.xyz/' + ep;
 										if (ep === 'cf_v4') url = 'https://cf.090227.xyz/ips-v4';
 										if (ep === 'cf_v6') url = 'https://cf.090227.xyz/ips-v6';
+										if (ep === 'cm_cidr') url = 'https://raw.githubusercontent.com/cmliu/cmliu/main/CF-CIDR.txt';
+										if (ep === 'as13335_v4') url = 'https://raw.githubusercontent.com/ipverse/asn-ip/master/as/13335/ipv4-aggregated.txt';
+										if (ep === 'as13335_v6') url = 'https://raw.githubusercontent.com/ipverse/asn-ip/master/as/13335/ipv6-aggregated.txt';
+										if (ep === 'as209242_v4') url = 'https://raw.githubusercontent.com/ipverse/asn-ip/master/as/209242/ipv4-aggregated.txt';
+										if (ep === 'as209242_v6') url = 'https://raw.githubusercontent.com/ipverse/asn-ip/master/as/209242/ipv6-aggregated.txt';
 										const r = await fetch(url);
 										if (r.ok) {
 											const text = await r.text();
