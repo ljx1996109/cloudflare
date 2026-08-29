@@ -369,16 +369,26 @@ export default {
 								let 完整优选列表 = [];
 								const baseReqUrl = request.url.split('?')[0] + '?';
 								const port = config_JSON.优选订阅生成.本地IP库.指定端口 !== undefined ? config_JSON.优选订阅生成.本地IP库.指定端口 : -1;
-								const ct = config_JSON.优选订阅生成.本地IP库.CT !== undefined ? config_JSON.优选订阅生成.本地IP库.CT : 20;
-								const cu = config_JSON.优选订阅生成.本地IP库.CU !== undefined ? config_JSON.优选订阅生成.本地IP库.CU : 20;
-								const cmcc = config_JSON.优选订阅生成.本地IP库.CMCC !== undefined ? config_JSON.优选订阅生成.本地IP库.CMCC : 20;
+
+								// 如果用户开启了自定义IP，则优先从 ADD.txt 读取
+								if (config_JSON.优选订阅生成.本地IP库.使用自定义IP) {
+									const customIPs = await env.KV.get('ADD.txt');
+									if (customIPs) 完整优选列表 = await 整理成数组(customIPs);
+								}
 								
-								if (ct > 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=ct'), ct, port))[0]);
-								if (cu > 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cu'), cu, port))[0]);
-								if (cmcc > 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cmcc'), cmcc, port))[0]);
-								
-								// 如果全为0，默认生成20个官方IP
-								if (完整优选列表.length === 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cf'), 20, port))[0]);
+								// 如果没有开启自定义IP，或者自定义IP为空，则回退到全自动优选逻辑
+								if (完整优选列表.length === 0) {
+									const ct = config_JSON.优选订阅生成.本地IP库.CT !== undefined ? config_JSON.优选订阅生成.本地IP库.CT : 20;
+									const cu = config_JSON.优选订阅生成.本地IP库.CU !== undefined ? config_JSON.优选订阅生成.本地IP库.CU : 20;
+									const cmcc = config_JSON.优选订阅生成.本地IP库.CMCC !== undefined ? config_JSON.优选订阅生成.本地IP库.CMCC : 20;
+									
+									if (ct > 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=ct'), ct, port))[0]);
+									if (cu > 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cu'), cu, port))[0]);
+									if (cmcc > 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cmcc'), cmcc, port))[0]);
+									
+									// 如果全为0，默认生成20个官方IP
+									if (完整优选列表.length === 0) 完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cf'), 20, port))[0]);
+								}
 								
 								// 随机打乱列表
 								完整优选列表 = 完整优选列表.sort(() => Math.random() - 0.5);
