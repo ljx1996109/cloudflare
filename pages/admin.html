@@ -19913,23 +19913,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
 			if (optimizeMenu) optimizeMenu.click();
 			
 			try {
-				// 2. 从 API 聚合拉取近 500 个 IP
-				const endpoints = ['CloudFlareYes', 'ct', 'cu', 'cmcc'];
-				let allIps = [];
-				for (const ep of endpoints) {
-					try {
-						const r = await fetch('https://addressesapi.090227.xyz/' + ep);
-						if (r.ok) {
-							const text = await r.text();
-							allIps.push(...text.split('\n').map(l => l.trim()).filter(Boolean));
-						}
-					} catch (e) {}
+								// 2. 从后端中转接口拉取全量 IP
+				const r = await fetch('/admin/get-ips', { method: 'POST' });
+				if (!r.ok) {
+					showToast('获取源 IP 失败，请检查网络', 'error');
+					return;
 				}
-				// 去重
+				const allIpsStr = await r.text();
+				let allIps = allIpsStr.split('
+').map(l => l.trim()).filter(Boolean);
 				allIps = [...new Set(allIps)];
 				
 				if (allIps.length === 0) {
-					showToast('获取源 IP 失败，请检查网络', 'error');
+					showToast('获取源 IP 为空', 'error');
 					return;
 				}
 				
