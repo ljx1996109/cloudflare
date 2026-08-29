@@ -10999,21 +10999,38 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					</div>
 
 					<div id="customIpsSection" class="form-group hidden-section">
+						<!-- 自定义源勾选的专属 CSS 样式覆盖 -->
+						<style>
+							input.opt-source-chk[type="checkbox"] {
+								display: inline-block !important;
+								width: 18px !important;
+								height: 18px !important;
+								padding: 0 !important;
+								margin: 0 !important;
+								appearance: checkbox !important;
+								-webkit-appearance: checkbox !important;
+								accent-color: var(--green) !important;
+								cursor: pointer !important;
+								background-color: transparent !important;
+								border: 1px solid var(--line-strong) !important;
+								box-shadow: none !important;
+							}
+						</style>
 						<!-- 自定义源勾选 -->
 						<div class="optimize-sources-wrapper" style="margin-bottom: 12px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-soft);">
 							<div style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">1. 选择待测 IP 数据源</div>
 							<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
 								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
-									<input type="checkbox" class="opt-source-chk" value="CloudFlareYes" checked style="width: 16px; height: 16px; margin: 0; accent-color: var(--green);"> CloudflareYes
+									<input type="checkbox" class="opt-source-chk" value="CloudFlareYes" checked> CloudflareYes
 								</label>
 								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
-									<input type="checkbox" class="opt-source-chk" value="ct" checked style="width: 16px; height: 16px; margin: 0; accent-color: var(--green);"> 电信 (CT)
+									<input type="checkbox" class="opt-source-chk" value="ct" checked> 电信 (CT)
 								</label>
 								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
-									<input type="checkbox" class="opt-source-chk" value="cu" checked style="width: 16px; height: 16px; margin: 0; accent-color: var(--green);"> 联通 (CU)
+									<input type="checkbox" class="opt-source-chk" value="cu" checked> 联通 (CU)
 								</label>
 								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
-									<input type="checkbox" class="opt-source-chk" value="cmcc" checked style="width: 16px; height: 16px; margin: 0; accent-color: var(--green);"> 移动 (CMCC)
+									<input type="checkbox" class="opt-source-chk" value="cmcc" checked> 移动 (CMCC)
 								</label>
 							</div>
 							<div style="font-size: 12px;">
@@ -20089,8 +20106,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					throw new Error(`获取 IP 失败 (HTTP ${response.status})`);
 				}
 
-				const text = await response.text();
-				let ips = text.split('\n').map(l => l.trim()).filter(Boolean);
+				let ips = text.split('\n')
+					.map(l => {
+						const parts = l.trim().split(/[#\s,]/);
+						return parts[0].trim();
+					})
+					.filter(ip => ip.includes('.') || ip.includes(':'));
 				ips = [...new Set(ips)];
 
 				if (ips.length === 0) {
