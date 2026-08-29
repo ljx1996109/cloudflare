@@ -14529,9 +14529,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 				}
 
 				function showNetworkWarning() {
-					renderNetworkWarning(buildNetworkWarningContext());
-					els.networkWarningOverlay.classList.add("is-visible");
-					els.networkWarningConfirmBtn.focus();
+					// 彻底禁用烦人的红牌警告弹窗，允许所有网络环境直接进行测速
+					console.log("拦截了烦人的网络警告弹窗");
 				}
 
 				function buildNetworkWarningContext() {
@@ -14770,6 +14769,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					const list = [];
 					if (state.ipv4) list.push("ipv4");
 					if (state.ipv6) list.push("ipv6");
+					// 强制放行：不管有没有检测到，都允许进行优选测速
+					if (list.length === 0) list.push("ipv4");
 					return list;
 				}
 
@@ -19963,8 +19964,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
 				ipInput.value = allIps.join('\n');
 				ipInput.dispatchEvent(new Event('input', { bubbles: true }));
 				
+				// 等待网络检测完成（按钮解除禁用）
+				for (let i = 0; i < 20; i++) {
+					if (!latencyBtn.disabled) break;
+					await new Promise(r => setTimeout(r, 250));
+				}
+				
 				if (latencyBtn.disabled) {
-					throw new Error('测速按钮当前处于禁用状态，请等待网络检测完成');
+					throw new Error('测速按钮长时间处于禁用状态，可能是网络检测卡住了');
 				}
 				
 				latencyBtn.click();
