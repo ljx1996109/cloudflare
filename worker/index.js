@@ -6291,26 +6291,32 @@ async function html1101(host, 访问IP) {
 }
 async function 自动优选最佳IP(env, config_JSON, request) {
 	try {
-		const res = await fetch('https://addressesapi.090227.xyz/CloudFlareYes');
-		if (res.ok) {
-			let text = await res.text();
-			let ips = text.split('\n').filter(Boolean).map(ip => ip.replace(/[\t\"\'\n]+/g, '').trim());
-			if (ips.length < 20) {
-				const randomIPs = (await 生成随机IP(request || {url: 'http://localhost'}, 20 - ips.length, -1))[0];
-				ips = ips.concat(randomIPs);
+		let 完整优选列表 = [];
+		const req = request || {url: 'http://localhost'};
+		const baseReqUrl = req.url.split('?')[0] + '?';
+		const port = -1; // 随机端口
+		
+		// 自动获取三大运营商各20个
+		完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=ct'), 20, port))[0]);
+		完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cu'), 20, port))[0]);
+		完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cmcc'), 20, port))[0]);
+		
+		if (完整优选列表.length === 0) {
+			完整优选列表.push(...(await 生成随机IP(new Request(baseReqUrl + '&cnIspCode=cf'), 60, port))[0]);
+		}
+		
+		const top60 = 完整优选列表.join('\n');
+		await env.KV.put('ADD.txt', top60);
+		
+		if (config_JSON && config_JSON.优选订阅生成) {
+			config_JSON.优选订阅生成.local = true;
+			if (config_JSON.优选订阅生成.本地IP库) {
+				config_JSON.优选订阅生成.本地IP库.随机IP = false;
+				config_JSON.优选订阅生成.本地IP库.使用自定义IP = true; // 强制启用自定义
 			}
-			const top20 = ips.slice(0, 20).join('\n');
-			await env.KV.put('ADD.txt', top20);
-			if (config_JSON && config_JSON.优选订阅生成) {
-				config_JSON.优选订阅生成.local = true;
-				if (config_JSON.优选订阅生成.本地IP库) {
-					config_JSON.优选订阅生成.本地IP库.随机IP = false;
-				}
-				await env.KV.put('config.json', JSON.stringify(config_JSON, null, 2));
-			}
-			console.log('自动优选最佳IP执行成功，已更新ADD.txt和配置');
+			await env.KV.put('config.json', JSON.stringify(config_JSON, null, 2));
 		}
 	} catch (e) {
-		console.error('自动优选最佳IP执行失败', e);
+		console.error('自动优选IP失败:', e);
 	}
 }
