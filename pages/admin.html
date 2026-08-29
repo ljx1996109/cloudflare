@@ -20316,7 +20316,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					showToast('优选已被用户手动停止！', 'info');
 				} else if (activeResults.length > 0) {
 					// 3. 应用并保存前 60 个低延迟 IP
-					const topIPs = activeResults.slice(0, 60).map(r => r.ip);
+					const topIPs = activeResults.slice(0, 60).map(r => {
+						if (r.ip.includes(':') && !r.ip.startsWith('[')) {
+							return `[${r.ip}]`;
+						}
+						return r.ip;
+					});
 					const toggle = document.getElementById('useCustomIPsToggle');
 					if (toggle && !toggle.checked) {
 						toggle.click();
