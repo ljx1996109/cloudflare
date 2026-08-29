@@ -19908,10 +19908,34 @@ svg.leaflet-image-layer.leaflet-interactive path {
 			try {
 				showToast('正在拉取全网优质源节点...', 'info');
 				
-				const ipInput = document.getElementById('ipInput');
-				const latencyBtn = document.getElementById('latencyBtn');
+				// 打开在线优选全屏模块
+				if (typeof openOnlineOptimizeModal === 'function') {
+					openOnlineOptimizeModal();
+				}
+				
+				const iframe = document.getElementById('onlineOptimizeFrame');
+				if (!iframe) {
+					throw new Error('找不到优选模块容器 (iframe)');
+				}
+				
+				// 等待 iframe 加载完成
+				let iframeDoc = null;
+				let ipInput = null;
+				let latencyBtn = null;
+				for (let i = 0; i < 30; i++) {
+					try {
+						iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+						if (iframeDoc) {
+							ipInput = iframeDoc.getElementById('ipInput');
+							latencyBtn = iframeDoc.getElementById('latencyBtn');
+							if (ipInput && latencyBtn) break;
+						}
+					} catch (e) {}
+					await new Promise(r => setTimeout(r, 100));
+				}
+				
 				if (!ipInput || !latencyBtn) {
-					throw new Error('找不到优选工具的输入框或测速按钮');
+					throw new Error('找不到优选工具的输入框或测速按钮 (iframe 加载失败)');
 				}
 				
 				let r;
@@ -19952,10 +19976,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
 						if (!btnText.includes('停止') && !btnText.includes('正在')) {
 							clearInterval(checkInterval);
 							
-							const rows = Array.from(document.querySelectorAll('#resultsTbody tr.result-row'));
+							const rows = Array.from(iframeDoc.querySelectorAll('#resultsTbody tr.result-row'));
 							const top60 = rows.slice(0, 60).map(tr => tr.dataset.resultId).filter(Boolean);
 							
 							if (top60.length > 0) {
+								if (typeof closeOnlineOptimizeModal === 'function') {
+									closeOnlineOptimizeModal();
+								}
+								
 								const toggle = document.getElementById('useCustomIPsToggle');
 								if (toggle && !toggle.checked) {
 									toggle.click();
