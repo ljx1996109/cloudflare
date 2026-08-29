@@ -19906,7 +19906,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
 		}
 
 		async function runUltimateOptimizeMacro() {
+			const mainBtn = document.querySelector('button[onclick="runUltimateOptimizeMacro()"]');
+			const updateMainBtn = (text, disabled = true) => {
+				if (mainBtn) {
+					mainBtn.innerText = text;
+					mainBtn.disabled = disabled;
+				}
+			};
+
 			try {
+				updateMainBtn('正在获取优选节点...');
 				showToast('正在拉取全网优质源节点...', 'info');
 				
 				// 打开在线优选全屏模块
@@ -19938,6 +19947,23 @@ svg.leaflet-image-layer.leaflet-interactive path {
 				if (!ipInput || !latencyBtn) {
 					throw new Error('找不到优选工具的输入框或测速按钮 (iframe 加载失败)');
 				}
+
+				// 调优测速设置，以获取更多的可用 IP
+				const limitInput = iframeDoc.getElementById('limitInput');
+				const timeoutInput = iframeDoc.getElementById('timeoutInput');
+				const threadsInput = iframeDoc.getElementById('threadsInput');
+				if (limitInput) {
+					limitInput.value = '1000';
+					limitInput.dispatchEvent(new Event('change', { bubbles: true }));
+				}
+				if (timeoutInput) {
+					timeoutInput.value = '2000'; // 提高延迟超时时间，让更多IP有足够的时间完成握手
+					timeoutInput.dispatchEvent(new Event('change', { bubbles: true }));
+				}
+				if (threadsInput) {
+					threadsInput.value = '32'; // 并发提高到32，加快测速速度
+					threadsInput.dispatchEvent(new Event('change', { bubbles: true }));
+				}
 				
 				let r;
 				try {
@@ -19964,6 +19990,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 				ipInput.value = allIps.join('\n');
 				ipInput.dispatchEvent(new Event('input', { bubbles: true }));
 				
+				updateMainBtn('正在等待网络检测...');
 				// 等待网络检测完成（按钮解除禁用）
 				for (let i = 0; i < 20; i++) {
 					if (!latencyBtn.disabled) break;
@@ -19976,14 +20003,22 @@ svg.leaflet-image-layer.leaflet-interactive path {
 				
 				latencyBtn.click();
 				showToast(`已开始本地测速 (${allIps.length} 个 IP)，请耐心等待过程跑完...`, 'info');
+				updateMainBtn('正在准备测速...');
 				
 				const checkInterval = setInterval(async () => {
 					try {
 						const btnText = latencyBtn.innerText || '';
+						
+						// 更新主页面按钮的进度状态
+						const progressTextEl = iframeDoc.getElementById('progressText');
+						const progressText = progressTextEl ? progressTextEl.innerText : '0/0';
+						const rows = Array.from(iframeDoc.querySelectorAll('#resultsTbody tr.result-row'));
+						const foundCount = rows.length;
+						updateMainBtn(`正在优选: ${progressText} (已找到 ${foundCount} 个)`);
+
 						if (!btnText.includes('停止') && !btnText.includes('正在')) {
 							clearInterval(checkInterval);
 							
-							const rows = Array.from(iframeDoc.querySelectorAll('#resultsTbody tr.result-row'));
 							const top60 = rows.slice(0, 60).map(tr => tr.dataset.resultId).filter(Boolean);
 							
 							if (top60.length > 0) {
@@ -20008,15 +20043,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
 							} else {
 								showToast('未能获取到有效的测速结果', 'error');
 							}
+							updateMainBtn('本地一键IP优选', false);
 						}
 					} catch (innerErr) {
 						clearInterval(checkInterval);
 						showToast('提取结果时出错: ' + innerErr.message, 'error');
+						updateMainBtn('本地一键IP优选', false);
 					}
 				}, 2000);
 			} catch (e) {
 				showToast('宏执行出错: ' + e.message, 'error');
 				console.error(e);
+				updateMainBtn('本地一键IP优选', false);
 			}
 		}
 
