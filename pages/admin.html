@@ -19920,8 +19920,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					return;
 				}
 				const allIpsStr = await r.text();
-				let allIps = allIpsStr.split('
-').map(l => l.trim()).filter(Boolean);
+				let allIps = allIpsStr.split('\n').map(l => l.trim()).filter(Boolean);
 				allIps = [...new Set(allIps)];
 				
 				if (allIps.length === 0) {
