@@ -10999,10 +10999,73 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					</div>
 
 					<div id="customIpsSection" class="form-group hidden-section">
+						<!-- 自定义源勾选 -->
+						<div class="optimize-sources-wrapper" style="margin-bottom: 12px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-soft);">
+							<div style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">1. 选择待测 IP 数据源</div>
+							<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+									<input type="checkbox" class="opt-source-chk" value="CloudFlareYes" checked style="width: 16px; height: 16px; margin: 0; accent-color: var(--green);"> CloudflareYes
+								</label>
+								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+									<input type="checkbox" class="opt-source-chk" value="ct" checked style="width: 16px; height: 16px; margin: 0; accent-color: var(--green);"> 电信 (CT)
+								</label>
+								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+									<input type="checkbox" class="opt-source-chk" value="cu" checked style="width: 16px; height: 16px; margin: 0; accent-color: var(--green);"> 联通 (CU)
+								</label>
+								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+									<input type="checkbox" class="opt-source-chk" value="cmcc" checked style="width: 16px; height: 16px; margin: 0; accent-color: var(--green);"> 移动 (CMCC)
+								</label>
+							</div>
+							<div style="font-size: 12px;">
+								<a href="javascript:void(0)" onclick="selectAllOptSources(true)" style="color: var(--blue); text-decoration: none; margin-right: 12px; font-weight: bold;">全选</a>
+								<a href="javascript:void(0)" onclick="selectAllOptSources(false)" style="color: var(--blue); text-decoration: none; font-weight: bold;">清空</a>
+							</div>
+						</div>
+
+						<!-- 配置项 -->
+						<div class="optimize-configs-wrapper" style="margin-bottom: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+							<div>
+								<label style="font-size: 12px; display: block; margin-bottom: 4px; color: var(--muted);">待测IP数量限制</label>
+								<input type="number" id="optLimitInput" class="input" value="1000" min="10" max="2500" style="padding: 6px 10px; width: 100%; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);">
+							</div>
+							<div>
+								<label style="font-size: 12px; display: block; margin-bottom: 4px; color: var(--muted);">超时上限 (ms)</label>
+								<input type="number" id="optTimeoutInput" class="input" value="2000" min="200" max="5000" style="padding: 6px 10px; width: 100%; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);">
+							</div>
+						</div>
+
+						<!-- 原生进度条面板 (默认隐藏) -->
+						<div id="optProgressPanel" style="display: none; margin-bottom: 12px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-soft);">
+							<div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+								<span id="optProgressStatus" style="font-weight: bold; color: var(--text);">正在准备数据...</span>
+								<span id="optProgressCount" style="font-weight: bold; color: var(--green);">0%</span>
+							</div>
+							<div style="width: 100%; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
+								<div id="optProgressBar" style="width: 0%; height: 100%; background: var(--green); transition: width 0.1s; border-radius: 4px;"></div>
+							</div>
+							
+							<!-- 结果滚动预览 -->
+							<div style="max-height: 180px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);">
+								<table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+									<thead>
+										<tr style="background: var(--panel-soft); border-bottom: 1px solid var(--line); color: var(--muted);">
+											<th style="padding: 6px; font-weight: bold;">IP 地址</th>
+											<th style="padding: 6px; font-weight: bold; width: 60px;">延迟</th>
+											<th style="padding: 6px; font-weight: bold; width: 60px;">地区</th>
+											<th style="padding: 6px; font-weight: bold; width: 80px;">数据中心</th>
+										</tr>
+									</thead>
+									<tbody id="optResultsPreviewTbody">
+										<!-- 动态生成测速完成的IP结果 -->
+									</tbody>
+								</table>
+							</div>
+						</div>
+
 						<label for="customIPs">自定义优选 IP 列表（一行一个）</label>
-						<textarea id="customIPs" rows="6" onchange="markModified('sub')" placeholder="请输入你要强制使用的优选IP，每行一个。保存后生效。"></textarea>
+						<textarea id="customIPs" rows="6" onchange="markModified('sub')" placeholder="请手动输入IP，或点击下方按钮执行本地一键优选自动填充。保存后生效。"></textarea>
 						<small class="form-help">如果留空，将自动回退到“自动优选”功能。</small>
-						<button class="btn" type="button" onclick="runUltimateOptimizeMacro()" style="margin-top: 10px; width: 100%; background: var(--primary);">本地一键IP优选</button>
+						<button class="btn" type="button" id="optStartBtn" onclick="runNativeOptimizeWorkflow()" style="margin-top: 10px; width: 100%; background: var(--primary); font-weight: bold; font-size: 14px;">本地一键IP优选</button>
 						<button class="btn success" type="button" onclick="saveCustomIPs()" style="margin-top: 10px; width: 100%;">保存自定义IP</button>
 					</div>
 
@@ -19905,156 +19968,230 @@ svg.leaflet-image-layer.leaflet-interactive path {
 			}
 		}
 
-		async function runUltimateOptimizeMacro() {
-			const mainBtn = document.querySelector('button[onclick="runUltimateOptimizeMacro()"]');
-			const updateMainBtn = (text, disabled = true) => {
-				if (mainBtn) {
-					mainBtn.innerText = text;
-					mainBtn.disabled = disabled;
+		let nativeOptRunning = false;
+		let nativeOptCancel = false;
+
+		function selectAllOptSources(val) {
+			document.querySelectorAll('.opt-source-chk').forEach(chk => chk.checked = val);
+		}
+
+		function ipv4ToHex(ip) {
+			return ip.split('.')
+				.map(part => Number(part).toString(16).padStart(2, '0'))
+				.join('')
+				.toUpperCase();
+		}
+
+		function ipv6ToLabel(ip) {
+			return ip.toLowerCase().replace(/:/g, '-');
+		}
+
+		async function testIpLatency(ip, timeout = 2000) {
+			const isIpv6 = ip.includes(':');
+			const label = isIpv6 ? ipv6ToLabel(ip) : ipv4ToHex(ip);
+			const host = "bestcf.cmliussss.hidns.vip";
+			const url = `https://${label}.${host}:443/ip.json?_t=${Date.now()}`;
+			
+			const controller = new AbortController();
+			const timer = setTimeout(() => controller.abort(), timeout);
+			const start = performance.now();
+			try {
+				const response = await fetch(url, { signal: controller.signal });
+				clearTimeout(timer);
+				if (response.ok) {
+					const data = await response.json();
+					const latency = Math.round(performance.now() - start);
+					return {
+						ip,
+						latency,
+						country: data.country || '未知',
+						colo: data.colo || '未知'
+					};
 				}
-			};
+			} catch (e) {
+				clearTimeout(timer);
+			}
+			
+			// 备用节点重试
+			const fallbackHost = "ns.psb.kdns.fr";
+			const fallbackUrl = `https://${label}.${fallbackHost}:443/ip.json?_t=${Date.now()}`;
+			const controller2 = new AbortController();
+			const timer2 = setTimeout(() => controller2.abort(), timeout);
+			const start2 = performance.now();
+			try {
+				const response = await fetch(fallbackUrl, { signal: controller2.signal });
+				clearTimeout(timer2);
+				if (response.ok) {
+					const data = await response.json();
+					const latency = Math.round(performance.now() - start2);
+					return {
+						ip,
+						latency,
+						country: data.country || '未知',
+						colo: data.colo || '未知'
+					};
+				}
+			} catch (e) {
+				clearTimeout(timer2);
+			}
+			return null;
+		}
+
+		async function runNativeOptimizeWorkflow() {
+			const startBtn = document.getElementById('optStartBtn');
+			if (nativeOptRunning) {
+				nativeOptCancel = true;
+				if (startBtn) startBtn.innerText = '正在停止...';
+				return;
+			}
+
+			const checkedChks = Array.from(document.querySelectorAll('.opt-source-chk:checked'));
+			if (checkedChks.length === 0) {
+				showToast('请至少勾选一个 IP 数据源！', 'error');
+				return;
+			}
+
+			const selectedSources = checkedChks.map(chk => chk.value);
+			const limit = parseInt(document.getElementById('optLimitInput').value, 10) || 500;
+			const timeout = parseInt(document.getElementById('optTimeoutInput').value, 10) || 2000;
+
+			nativeOptRunning = true;
+			nativeOptCancel = false;
+
+			if (startBtn) {
+				startBtn.style.background = 'var(--red)';
+				startBtn.innerText = '停止优选';
+			}
+
+			const progressPanel = document.getElementById('optProgressPanel');
+			const progressBar = document.getElementById('optProgressBar');
+			const progressCount = document.getElementById('optProgressCount');
+			const progressStatus = document.getElementById('optProgressStatus');
+			const resultsTbody = document.getElementById('optResultsPreviewTbody');
+
+			if (progressPanel) progressPanel.style.display = 'block';
+			if (progressBar) progressBar.style.width = '0%';
+			if (progressCount) progressCount.innerText = '0%';
+			if (progressStatus) progressStatus.innerText = '正在拉取 IP 库数据...';
+			if (resultsTbody) resultsTbody.innerHTML = '';
+
+			const activeResults = [];
 
 			try {
-				updateMainBtn('正在获取优选节点...');
-				showToast('正在拉取全网优质源节点...', 'info');
-				
-				// 打开在线优选全屏模块
-				if (typeof openOnlineOptimizeModal === 'function') {
-					openOnlineOptimizeModal();
+				// 1. 获取后端 IP
+				const response = await fetch('/admin/get-ips', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json;charset=utf-8' },
+					body: JSON.stringify({ endpoints: selectedSources })
+				});
+
+				if (!response.ok) {
+					throw new Error(`获取 IP 失败 (HTTP ${response.status})`);
 				}
-				
-				const iframe = document.getElementById('onlineOptimizeFrame');
-				if (!iframe) {
-					throw new Error('找不到优选模块容器 (iframe)');
+
+				const text = await response.text();
+				let ips = text.split('\n').map(l => l.trim()).filter(Boolean);
+				ips = [...new Set(ips)];
+
+				if (ips.length === 0) {
+					throw new Error('IP 数据源返回为空');
 				}
-				
-				// 等待 iframe 加载完成
-				let iframeDoc = null;
-				let ipInput = null;
-				let latencyBtn = null;
-				for (let i = 0; i < 30; i++) {
+
+				// 随机打乱，获取更多随机 IP 样本进行测试
+				for (let i = ips.length - 1; i > 0; i--) {
+					const j = Math.floor(Math.random() * (i + 1));
+					[ips[i], ips[j]] = [ips[j], ips[i]];
+				}
+
+				// 限制测试总数
+				const testQueue = ips.slice(0, limit);
+				if (progressStatus) progressStatus.innerText = `准备测试 ${testQueue.length} 个 IP...`;
+
+				// 2. 并发池测速
+				const concurrency = 32;
+				let index = 0;
+				let active = 0;
+				let resolved = 0;
+
+				const runNext = async () => {
+					if (nativeOptCancel || index >= testQueue.length) return;
+					const ip = testQueue[index++];
+					active++;
+					
 					try {
-						iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-						if (iframeDoc) {
-							ipInput = iframeDoc.getElementById('ipInput');
-							latencyBtn = iframeDoc.getElementById('latencyBtn');
-							if (ipInput && latencyBtn) break;
+						const res = await testIpLatency(ip, timeout);
+						if (res) {
+							activeResults.push(res);
+							// 实时对前 50 条结果进行排序和渲染展示
+							activeResults.sort((a, b) => a.latency - b.latency);
+							if (resultsTbody) {
+								resultsTbody.innerHTML = activeResults.slice(0, 50).map(r => `
+									<tr style="border-bottom: 1px solid var(--line);">
+										<td style="padding: 6px; font-family: monospace;">${r.ip}</td>
+										<td style="padding: 6px; color: var(--green); font-weight: bold;">${r.latency}ms</td>
+										<td style="padding: 6px;">${r.country}</td>
+										<td style="padding: 6px;">${r.colo}</td>
+									</tr>
+								`).join('');
+							}
 						}
 					} catch (e) {}
-					await new Promise(r => setTimeout(r, 100));
-				}
-				
-				if (!ipInput || !latencyBtn) {
-					throw new Error('找不到优选工具的输入框或测速按钮 (iframe 加载失败)');
-				}
+					
+					active--;
+					resolved++;
 
-				// 调优测速设置，以获取更多的可用 IP
-				const limitInput = iframeDoc.getElementById('limitInput');
-				const timeoutInput = iframeDoc.getElementById('timeoutInput');
-				const threadsInput = iframeDoc.getElementById('threadsInput');
-				if (limitInput) {
-					limitInput.value = '1000';
-					limitInput.dispatchEvent(new Event('change', { bubbles: true }));
-				}
-				if (timeoutInput) {
-					timeoutInput.value = '2000'; // 提高延迟超时时间，让更多IP有足够的时间完成握手
-					timeoutInput.dispatchEvent(new Event('change', { bubbles: true }));
-				}
-				if (threadsInput) {
-					threadsInput.value = '32'; // 并发提高到32，加快测速速度
-					threadsInput.dispatchEvent(new Event('change', { bubbles: true }));
-				}
-				
-				let r;
-				try {
-					r = await fetch('/admin/get-ips', { method: 'POST' });
-				} catch (netErr) {
-					throw new Error('网络请求被拒绝 (可能是Worker未更新或网络问题): ' + netErr.message);
-				}
-				
-				if (!r.ok) {
-					const errText = await r.text().catch(() => '');
-					throw new Error(`获取源 IP 失败 (HTTP ${r.status}) ${errText}`);
-				}
-				
-				const allIpsStr = await r.text();
-				if (!allIpsStr) throw new Error('接口返回为空');
-				
-				let allIps = allIpsStr.split('\n').map(l => l.trim()).filter(Boolean);
-				allIps = [...new Set(allIps)];
-				
-				if (allIps.length === 0) {
-					throw new Error('未提取到任何有效的 IP');
-				}
-				
-				ipInput.value = allIps.join('\n');
-				ipInput.dispatchEvent(new Event('input', { bubbles: true }));
-				
-				updateMainBtn('正在等待网络检测...');
-				// 等待网络检测完成（按钮解除禁用）
-				for (let i = 0; i < 20; i++) {
-					if (!latencyBtn.disabled) break;
-					await new Promise(r => setTimeout(r, 250));
-				}
-				
-				if (latencyBtn.disabled) {
-					throw new Error('测速按钮长时间处于禁用状态，可能是网络检测卡住了');
-				}
-				
-				latencyBtn.click();
-				showToast(`已开始本地测速 (${allIps.length} 个 IP)，请耐心等待过程跑完...`, 'info');
-				updateMainBtn('正在准备测速...');
-				
-				const checkInterval = setInterval(async () => {
-					try {
-						const btnText = latencyBtn.innerText || '';
-						
-						// 更新主页面按钮的进度状态
-						const progressTextEl = iframeDoc.getElementById('progressText');
-						const progressText = progressTextEl ? progressTextEl.innerText : '0/0';
-						const rows = Array.from(iframeDoc.querySelectorAll('#resultsTbody tr.result-row'));
-						const foundCount = rows.length;
-						updateMainBtn(`正在优选: ${progressText} (已找到 ${foundCount} 个)`);
+					// 更新进度条
+					const pct = Math.round((resolved / testQueue.length) * 100);
+					if (progressBar) progressBar.style.width = pct + '%';
+					if (progressCount) progressCount.innerText = pct + '%';
+					if (progressStatus) progressStatus.innerText = `已测: ${resolved}/${testQueue.length} (有效: ${activeResults.length})`;
+					
+					await runNext();
+				};
 
-						if (!btnText.includes('停止') && !btnText.includes('正在')) {
-							clearInterval(checkInterval);
-							
-							const top60 = rows.slice(0, 60).map(tr => tr.dataset.resultId).filter(Boolean);
-							
-							if (top60.length > 0) {
-								if (typeof closeOnlineOptimizeModal === 'function') {
-									closeOnlineOptimizeModal();
-								}
-								
-								const toggle = document.getElementById('useCustomIPsToggle');
-								if (toggle && !toggle.checked) {
-									toggle.click();
-								}
-								
-								const customIPsInput = document.getElementById('customIPs');
-								if (customIPsInput) {
-									customIPsInput.value = top60.join('\n');
-									await saveCustomIPs();
-									await saveConfigToServer('sub');
-									showToast('一键极致优选完成！已自动剔除高延迟节点并应用生效！', 'success');
-								} else {
-									showToast('找不到自定义IP输入框', 'error');
-								}
-							} else {
-								showToast('未能获取到有效的测速结果', 'error');
-							}
-							updateMainBtn('本地一键IP优选', false);
-						}
-					} catch (innerErr) {
-						clearInterval(checkInterval);
-						showToast('提取结果时出错: ' + innerErr.message, 'error');
-						updateMainBtn('本地一键IP优选', false);
+				const promises = [];
+				for (let i = 0; i < Math.min(concurrency, testQueue.length); i++) {
+					promises.push(runNext());
+				}
+				await Promise.all(promises);
+
+				if (nativeOptCancel) {
+					showToast('优选已被用户手动停止！', 'info');
+				} else if (activeResults.length > 0) {
+					// 3. 应用并保存前 60 个低延迟 IP
+					const topIPs = activeResults.slice(0, 60).map(r => r.ip);
+					const toggle = document.getElementById('useCustomIPsToggle');
+					if (toggle && !toggle.checked) {
+						toggle.click();
 					}
-				}, 2000);
-			} catch (e) {
-				showToast('宏执行出错: ' + e.message, 'error');
-				console.error(e);
-				updateMainBtn('本地一键IP优选', false);
+					
+					const customIPsInput = document.getElementById('customIPs');
+					if (customIPsInput) {
+						customIPsInput.value = topIPs.join('\n');
+						await saveCustomIPs();
+						await saveConfigToServer('sub');
+						showToast(`本地极致优选完成！成功应用 ${topIPs.length} 个低延迟节点！`, 'success');
+					}
+				} else {
+					showToast('未检测到任何有效的可用 IP，请更换源或检查网络连接', 'error');
+				}
+
+			} catch (err) {
+				showToast('优选出错: ' + err.message, 'error');
+				console.error(err);
+			} finally {
+				nativeOptRunning = false;
+				nativeOptCancel = false;
+				if (startBtn) {
+					startBtn.style.background = 'var(--primary)';
+					startBtn.innerText = '本地一键IP优选';
+				}
+				// 测速完成后保持面板显示 3 秒，之后隐藏
+				setTimeout(() => {
+					if (!nativeOptRunning && progressPanel) {
+						progressPanel.style.display = 'none';
+					}
+				}, 4000);
 			}
 		}
 

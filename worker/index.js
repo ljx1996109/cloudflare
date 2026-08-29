@@ -281,7 +281,16 @@ export default {
 							}
 						} else if (区分大小写访问路径 === 'admin/get-ips') {
 							try {
-								const endpoints = ['CloudFlareYes', 'ct', 'cu', 'cmcc'];
+								const body = await request.text().catch(() => '');
+								let endpoints = ['CloudFlareYes', 'ct', 'cu', 'cmcc'];
+								if (body) {
+									try {
+										const parsed = JSON.parse(body);
+										if (Array.isArray(parsed.endpoints) && parsed.endpoints.length > 0) {
+											endpoints = parsed.endpoints.filter(ep => ['CloudFlareYes', 'ct', 'cu', 'cmcc'].includes(ep));
+										}
+									} catch (e) {}
+								}
 								let allIps = [];
 								for (const ep of endpoints) {
 									try {
