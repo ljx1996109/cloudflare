@@ -20295,10 +20295,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
 				} else if (activeResults.length > 0) {
 					// 3. 应用并保存前 60 个低延迟 IP
 					const topIPs = activeResults.slice(0, 60).map(r => {
-						if (r.ip.includes(':') && !r.ip.startsWith('[')) {
-							return `[${r.ip}]`;
+						let formattedIp = r.ip;
+						if (formattedIp.includes(':') && !formattedIp.startsWith('[')) {
+							formattedIp = `[${formattedIp}]`;
 						}
-						return r.ip;
+						let remark = '';
+						if (r.country && r.colo) remark = `#${r.country}-${r.colo}`;
+						else if (r.country) remark = `#${r.country}`;
+						else if (r.colo) remark = `#${r.colo}`;
+						return `${formattedIp}${remark}`;
 					});
 					const toggle = document.getElementById('useCustomIPsToggle');
 					if (toggle && !toggle.checked) {
