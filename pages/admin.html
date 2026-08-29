@@ -20124,52 +20124,30 @@ svg.leaflet-image-layer.leaflet-interactive path {
 		}
 
 		async function testIpLatency(ip, timeout = 2000) {
+			// 强制使用 http 协议绕过 SNI 和证书阻断，直接拉取 CF 节点默认页面
+			// 无论 IP 是 IPv4 还是 IPv6，对于 IPv6 需要加上方括号，如 http://[2606:4700::1]/
 			const isIpv6 = ip.includes(':');
-			const label = isIpv6 ? ipv6ToLabel(ip) : ipv4ToHex(ip);
-			const host = "bestcf.cmliussss.hidns.vip";
-			const url = `https://${label}.${host}:443/ip.json?_t=${Date.now()}`;
+			const formattedIp = isIpv6 ? `[${ip}]` : ip;
+			const url = `http://${formattedIp}/cdn-cgi/trace?_t=${Date.now()}`;
 			
 			const controller = new AbortController();
 			const timer = setTimeout(() => controller.abort(), timeout);
 			const start = performance.now();
 			try {
-				const response = await fetch(url, { signal: controller.signal });
+				const response = await fetch(url, { 
+					method: 'GET',
+					mode: 'no-cors', // 关键：忽略跨域拦截和 HTTPS 强制
+					signal: controller.signal 
+				});
 				clearTimeout(timer);
-				if (response.ok) {
-					const data = await response.json();
-					const latency = Math.round(performance.now() - start);
-					return {
-						ip,
-						latency,
-						country: data.country || '未知',
-						colo: data.colo || '未知'
-					};
-				}
+				return {
+					ip,
+					latency: Math.round(performance.now() - start),
+					country: '直连',
+					colo: '本机'
+				};
 			} catch (e) {
 				clearTimeout(timer);
-			}
-			
-			// 备用节点重试
-			const fallbackHost = "ns.psb.kdns.fr";
-			const fallbackUrl = `https://${label}.${fallbackHost}:443/ip.json?_t=${Date.now()}`;
-			const controller2 = new AbortController();
-			const timer2 = setTimeout(() => controller2.abort(), timeout);
-			const start2 = performance.now();
-			try {
-				const response = await fetch(fallbackUrl, { signal: controller2.signal });
-				clearTimeout(timer2);
-				if (response.ok) {
-					const data = await response.json();
-					const latency = Math.round(performance.now() - start2);
-					return {
-						ip,
-						latency,
-						country: data.country || '未知',
-						colo: data.colo || '未知'
-					};
-				}
-			} catch (e) {
-				clearTimeout(timer2);
 			}
 			return null;
 		}
