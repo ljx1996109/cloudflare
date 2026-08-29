@@ -20106,6 +20106,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					throw new Error(`获取 IP 失败 (HTTP ${response.status})`);
 				}
 
+				const text = await response.text();
 				let ips = text.split('\n')
 					.map(l => {
 						const parts = l.trim().split(/[#\s,]/);
