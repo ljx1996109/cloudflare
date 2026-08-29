@@ -20304,7 +20304,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 						if (r.country && r.colo) remark = `#${r.country}-${r.colo}`;
 						else if (r.country) remark = `#${r.country}`;
 						else if (r.colo) remark = `#${r.colo}`;
-						return `${formattedIp}${remark}`;
+						return `${formattedIp}:80${remark}`;
 					});
 					const toggle = document.getElementById('useCustomIPsToggle');
 					if (toggle && !toggle.checked) {
