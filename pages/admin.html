@@ -19734,10 +19734,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
 			const host = window.location.host;
 			const link = currentConfig.LINK;
 			document.getElementById('LinkURL').value = currentConfig.LINK;
-			document.getElementById('subLink').value = `https://${host}/sub?token=${token}`;
-			document.getElementById('base64Link').value = `https://${host}/sub?token=${token}&b64`;
-			document.getElementById('clashLink').value = `https://${host}/sub?token=${token}&clash`;
-			document.getElementById('singboxLink').value = `https://${host}/sub?token=${token}&sb`;
+			const protocol = window.location.protocol;
+			document.getElementById('subLink').value = `${protocol}//${host}/sub?token=${token}`;
+			document.getElementById('base64Link').value = `${protocol}//${host}/sub?token=${token}&b64`;
+			document.getElementById('clashLink').value = `${protocol}//${host}/sub?token=${token}&clash`;
+			document.getElementById('singboxLink').value = `${protocol}//${host}/sub?token=${token}&sb`;
 
 			// 编辑订阅生成 (ISP节点策略)
 			if (currentConfig.优选订阅生成 && currentConfig.优选订阅生成.本地IP库) {
