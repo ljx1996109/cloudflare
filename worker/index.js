@@ -287,14 +287,17 @@ export default {
 									try {
 										const parsed = JSON.parse(body);
 										if (Array.isArray(parsed.endpoints) && parsed.endpoints.length > 0) {
-											endpoints = parsed.endpoints.filter(ep => ['CloudFlareYes', 'ct', 'cu', 'cmcc'].includes(ep));
+											endpoints = parsed.endpoints.filter(ep => ['CloudFlareYes', 'ct', 'cu', 'cmcc', 'cf_v4', 'cf_v6'].includes(ep));
 										}
 									} catch (e) {}
 								}
 								let allIps = [];
 								for (const ep of endpoints) {
 									try {
-										const r = await fetch('https://addressesapi.090227.xyz/' + ep);
+										let url = 'https://addressesapi.090227.xyz/' + ep;
+										if (ep === 'cf_v4') url = 'https://cf.090227.xyz/ips-v4';
+										if (ep === 'cf_v6') url = 'https://cf.090227.xyz/ips-v6';
+										const r = await fetch(url);
 										if (r.ok) {
 											const text = await r.text();
 											const arr = text.split('\n').map(l => l.trim()).filter(Boolean);

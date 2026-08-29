@@ -11021,7 +11021,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 							<div style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">1. 选择待测 IP 数据源</div>
 							<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
 								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
-									<input type="checkbox" class="opt-source-chk" value="CloudFlareYes" checked> CloudflareYes
+									<input type="checkbox" class="opt-source-chk" value="CloudFlareYes" checked> CloudflareYes (精选)
 								</label>
 								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
 									<input type="checkbox" class="opt-source-chk" value="ct" checked> 电信 (CT)
@@ -11031,6 +11031,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
 								</label>
 								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
 									<input type="checkbox" class="opt-source-chk" value="cmcc" checked> 移动 (CMCC)
+								</label>
+								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+									<input type="checkbox" class="opt-source-chk" value="cf_v4" checked> CF官方IPv4 (大池-生成700个)
+								</label>
+								<label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;">
+									<input type="checkbox" class="opt-source-chk" value="cf_v6" checked> CF官方IPv6 (大池-生成300个)
 								</label>
 							</div>
 							<div style="font-size: 12px;">
@@ -19992,6 +19998,105 @@ svg.leaflet-image-layer.leaflet-interactive path {
 			document.querySelectorAll('.opt-source-chk').forEach(chk => chk.checked = val);
 		}
 
+		function ip2int(ip) {
+			return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+		}
+
+		function int2ip(int) {
+			return [
+				(int >>> 24) & 0xFF,
+				(int >>> 16) & 0xFF,
+				(int >>> 8) & 0xFF,
+				int & 0xFF
+			].join('.');
+		}
+
+		function generateRandomIpsFromCidr(cidr, count = 20) {
+			const parts = cidr.split('/');
+			if (parts.length !== 2) return [];
+			const baseIp = parts[0];
+			const prefix = parseInt(parts[1], 10);
+			if (isNaN(prefix) || prefix < 0 || prefix > 32) return [];
+			
+			const ipInt = ip2int(baseIp);
+			const hostBits = 32 - prefix;
+			const numHosts = Math.pow(2, hostBits);
+			
+			const results = [];
+			const seen = new Set();
+			let attempts = 0;
+			const maxAttempts = count * 5;
+			
+			while (results.length < count && attempts < maxAttempts) {
+				const offset = Math.floor(Math.random() * numHosts);
+				const randomIpInt = (ipInt + offset) >>> 0;
+				const randomIp = int2ip(randomIpInt);
+				if (!seen.has(randomIp)) {
+					seen.add(randomIp);
+					results.push(randomIp);
+				}
+				attempts++;
+			}
+			return results;
+		}
+
+		function ipv6ToBigInt(ip) {
+			const parts = ip.split('::');
+			if (parts.length > 2) return null;
+			let left = parts[0] ? parts[0].split(':') : [];
+			let right = parts[1] ? parts[1].split(':') : [];
+			
+			while (left.length + right.length < 8) {
+				left.push('0');
+			}
+			const arr = left.concat(right).map(x => parseInt(x || '0', 16));
+			if (arr.some(isNaN)) return null;
+			
+			return arr.reduce((acc, val) => (acc << 16n) + BigInt(val), 0n);
+		}
+
+		function bigIntToIpv6(val) {
+			const arr = [];
+			for (let i = 0; i < 8; i++) {
+				arr.unshift(((val >> BigInt(i * 16)) & 0xFFFFn).toString(16));
+			}
+			return arr.join(':').replace(/:(?:0:)+/, '::');
+		}
+
+		function generateRandomIpv6FromCidr(cidr, count = 20) {
+			const parts = cidr.split('/');
+			if (parts.length !== 2) return [];
+			const baseIp = parts[0];
+			const prefix = parseInt(parts[1], 10);
+			if (isNaN(prefix) || prefix < 0 || prefix > 128) return [];
+			
+			const baseVal = ipv6ToBigInt(baseIp);
+			if (baseVal === null) return [];
+			
+			const hostBits = 128 - prefix;
+			const results = [];
+			const seen = new Set();
+			let attempts = 0;
+			const maxAttempts = count * 5;
+			
+			while (results.length < count && attempts < maxAttempts) {
+				let offset = 0n;
+				for (let i = 0; i < hostBits; i += 15) {
+					const bits = Math.min(15, hostBits - i);
+					const rand = BigInt(Math.floor(Math.random() * (1 << bits)));
+					offset = (offset << BigInt(bits)) + rand;
+				}
+				const randomVal = baseVal + offset;
+				const randomIp = bigIntToIpv6(randomVal);
+				if (!seen.has(randomIp)) {
+					seen.add(randomIp);
+					results.push(randomIp);
+				}
+				attempts++;
+			}
+			return results;
+		}
+
 		function ipv4ToHex(ip) {
 			return ip.split('.')
 				.map(part => Number(part).toString(16).padStart(2, '0'))
@@ -20107,12 +20212,27 @@ svg.leaflet-image-layer.leaflet-interactive path {
 				}
 
 				const text = await response.text();
-				let ips = text.split('\n')
+				let rawLines = text.split('\n')
 					.map(l => {
 						const parts = l.trim().split(/[#\s,]/);
 						return parts[0].trim();
 					})
-					.filter(ip => ip.includes('.') || ip.includes(':'));
+					.filter(Boolean);
+
+				let ips = [];
+				for (const line of rawLines) {
+					if (line.includes('/')) {
+						if (line.includes('.')) {
+							ips.push(...generateRandomIpsFromCidr(line, 50));
+						} else if (line.includes(':')) {
+							ips.push(...generateRandomIpv6FromCidr(line, 30));
+						}
+					} else {
+						if (line.includes('.') || line.includes(':')) {
+							ips.push(line);
+						}
+					}
+				}
 				ips = [...new Set(ips)];
 
 				if (ips.length === 0) {
