@@ -18,4 +18,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: deploy worker/index.js --name my-vpn-worker --compatibility-date 2024-01-01
+          command: deploy worker/index.js --name muddy-hall-e3a5 --compatibility-date 2024-01-01
