@@ -288,7 +288,8 @@ export default {
 										const r = await fetch('https://addressesapi.090227.xyz/' + ep);
 										if (r.ok) {
 											const text = await r.text();
-											allIps.push(...text.split('\n').map(l => l.trim()).filter(Boolean));
+											const arr = text.split('\n').map(l => l.trim()).filter(Boolean);
+											for (const ip of arr) allIps.push(ip);
 										}
 									} catch (e) {}
 								}
