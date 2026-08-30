@@ -20302,12 +20302,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					const ipListToQuery = rawTopIPs.map(r => r.ip);
 					let geoMap = {};
 					try {
-						const geoRes = await fetch('/admin/geoip', {
+						const queryIps = ipListToQuery.map(ip => ip.includes(':') && ip.startsWith('[') ? ip.slice(1, -1) : ip);
+						const geoRes = await fetch('http://ip-api.com/batch?fields=countryCode', {
 							method: 'POST',
 							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify({ ips: ipListToQuery })
+							body: JSON.stringify(queryIps)
 						});
-						if (geoRes.ok) geoMap = await geoRes.json();
+						if (geoRes.ok) {
+							const data = await geoRes.json();
+							for (let i = 0; i < ipListToQuery.length; i++) {
+								if (data[i] && data[i].countryCode) geoMap[ipListToQuery[i]] = data[i].countryCode;
+							}
+						}
 					} catch (e) {
 						console.error('GeoIP query failed:', e);
 					}
