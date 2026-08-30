@@ -20295,15 +20295,30 @@ svg.leaflet-image-layer.leaflet-interactive path {
 					showToast('优选已被用户手动停止！', 'info');
 				} else if (activeResults.length > 0) {
 					// 3. 应用并保存前 60 个低延迟 IP
-					const topIPs = activeResults.slice(0, 60).map(r => {
+					const rawTopIPs = activeResults.slice(0, 60);
+					
+					// 兜底查国家代码
+					if (progressStatus) progressStatus.innerText = `正在通过后端服务兜底查询国家代码...`;
+					const ipListToQuery = rawTopIPs.map(r => r.ip);
+					let geoMap = {};
+					try {
+						const geoRes = await fetch('/admin/geoip', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ ips: ipListToQuery })
+						});
+						if (geoRes.ok) geoMap = await geoRes.json();
+					} catch (e) {
+						console.error('GeoIP query failed:', e);
+					}
+
+					const topIPs = rawTopIPs.map(r => {
 						let formattedIp = r.ip;
 						if (formattedIp.includes(':') && !formattedIp.startsWith('[')) {
 							formattedIp = `[${formattedIp}]`;
 						}
-						let remark = '';
-						if (r.country && r.colo) remark = `#${r.country}-${r.colo}`;
-						else if (r.country) remark = `#${r.country}`;
-						else if (r.colo) remark = `#${r.colo}`;
+						let countryCode = geoMap[r.ip] || r.country || 'Unknown';
+						let remark = `#${countryCode}`;
 						return `${formattedIp}:80${remark}`;
 					});
 					const toggle = document.getElementById('useCustomIPsToggle');

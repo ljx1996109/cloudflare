@@ -328,6 +328,28 @@ export default {
 								console.error('保存自定义IP失败:', error);
 								return new Response(JSON.stringify({ error: '保存自定义IP失败: ' + error.message }), { status: 500, headers: { 'Content-Type': 'application/json;charset=utf-8' } });
 							}
+						} else if (区分大小写访问路径 === 'admin/geoip') {
+							try {
+								const body = await request.json();
+								const ips = body.ips;
+								if (!Array.isArray(ips) || ips.length === 0) return new Response(JSON.stringify({}), { status: 200 });
+								
+								// 兜底 GeoIP 查询机制
+								const queryIps = ips.map(ip => ip.includes(':') && ip.startsWith('[') ? ip.slice(1, -1) : ip);
+								const response = await fetch('http://ip-api.com/batch?fields=countryCode', {
+									method: 'POST',
+									body: JSON.stringify(queryIps),
+									headers: { 'Content-Type': 'application/json' }
+								});
+								const data = await response.json();
+								const results = {};
+								for (let i = 0; i < ips.length; i++) {
+									if (data[i] && data[i].countryCode) results[ips[i]] = data[i].countryCode;
+								}
+								return new Response(JSON.stringify(results), { status: 200, headers: { 'Content-Type': 'application/json;charset=utf-8' } });
+							} catch (error) {
+								return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+							}
 												} else if (区分大小写访问路径 === 'admin/autoSelectIP') { // 自动优选最佳IP
 							try {
 								ctx.waitUntil(自动优选最佳IP(env, config_JSON, request));
