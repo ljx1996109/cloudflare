@@ -20312,13 +20312,37 @@ svg.leaflet-image-layer.leaflet-interactive path {
 						console.error('GeoIP query failed:', e);
 					}
 
+					const countryMap = {
+						'US': '美国洛杉矶',
+						'SG': '新加坡',
+						'HK': '中国香港',
+						'JP': '日本',
+						'KR': '韩国',
+						'TW': '中国台湾',
+						'GB': '英国',
+						'FR': '法国',
+						'DE': '德国',
+						'CA': '加拿大',
+						'AU': '澳大利亚',
+						'NL': '荷兰',
+						'MY': '马来西亚',
+						'IN': '印度',
+						'TH': '泰国'
+					};
+
 					const topIPs = rawTopIPs.map(r => {
 						let formattedIp = r.ip;
 						if (formattedIp.includes(':') && !formattedIp.startsWith('[')) {
 							formattedIp = `[${formattedIp}]`;
 						}
 						let countryCode = geoMap[r.ip] || r.country || 'Unknown';
-						let remark = `#${countryCode}`;
+						let remark = '';
+						if (countryCode !== 'Unknown' && countryCode !== '直连') {
+							let cnName = countryMap[countryCode] || '节点';
+							remark = `#${countryCode}-${cnName}`;
+						} else {
+							remark = `#${countryCode}`;
+						}
 						return `${formattedIp}:80${remark}`;
 					});
 					const toggle = document.getElementById('useCustomIPsToggle');
